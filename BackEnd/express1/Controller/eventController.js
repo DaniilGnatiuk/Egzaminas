@@ -3,7 +3,7 @@ const eventModel = require("../Model/eventModel");
 async function getAllEvents(req, res) {
   try {
     const events = await eventModel.getAllEvents();
-    res.json(events.filter((ev) => ev.approved)); // Tik patvirtinti
+    res.json(events);
   } catch (err) {
     res.status(500).json({ error: "Nepavyko gauti renginių" });
   }
@@ -12,7 +12,11 @@ async function getAllEvents(req, res) {
 async function getUnapprovedEvents(req, res) {
   try {
     const events = await eventModel.getAllEvents();
-    res.json(events.filter((ev) => !ev.approved));
+    console.log("Visi renginiai:", events); // <-- Ši eilutė išves visus renginius į terminalą
+    const filtered = events.filter(
+      (ev) => ev.approved == 0 && ev.rejected == 0
+    );
+    res.json(filtered);
   } catch (err) {
     res.status(500).json({ error: "Nepavyko gauti renginių" });
   }
@@ -57,10 +61,36 @@ async function approveEvent(req, res) {
   }
 }
 
+async function rejectEvent(req, res) {
+  try {
+    await eventModel.rejectEvent(req.params.id);
+    res.json({ message: "Renginys atmestas" });
+  } catch (err) {
+    res.status(500).json({ error: "Nepavyko atmesti renginio" });
+  }
+}
+
+async function deleteUserEvent(req, res) {
+  try {
+    const event = await eventModel.getEventById(req.params.id);
+    if (!event || event.user_id !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "Neturite teisės trinti šio renginio" });
+    }
+    await eventModel.deleteEvent(req.params.id);
+    res.json({ message: "Renginys ištrintas" });
+  } catch (err) {
+    res.status(500).json({ error: "Nepavyko ištrinti renginio" });
+  }
+}
+
 module.exports = {
   getAllEvents,
   getEventById: eventModel.getEventById,
   createEvent,
   approveEvent,
   getUnapprovedEvents,
+  rejectEvent,
+  deleteUserEvent,
 };

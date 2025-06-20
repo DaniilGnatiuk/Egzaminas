@@ -18,4 +18,12 @@ async function addRating({ event_id, user_id, rating, comment }) {
   );
 }
 
-module.exports = { getRatingsByEvent, addRating };
+async function getEventAverageRating(eventId) {
+  const [rows] = await pool.query(
+    "SELECT AVG(rating) as avg FROM ratings WHERE event_id = ?",
+    [eventId]
+  );
+  return rows[0].avg || 0;
+}
+
+module.exports = { getRatingsByEvent, addRating, getEventAverageRating };

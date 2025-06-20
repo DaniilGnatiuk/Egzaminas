@@ -21,4 +21,15 @@ async function addRating(req, res) {
   }
 }
 
-module.exports = { getRatingsByEvent, addRating };
+async function getEventById(req, res) {
+  try {
+    const event = await eventModel.getEventById(req.params.id);
+    if (!event) return res.status(404).json({ error: "Renginys nerastas" });
+    event.avgRating = await eventModel.getEventAverageRating(event.id);
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: "Nepavyko gauti renginio" });
+  }
+}
+
+module.exports = { getRatingsByEvent, addRating, getEventById };
